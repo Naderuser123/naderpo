@@ -2250,31 +2250,40 @@ function teacherScript() {
   setTimeout(()=>{document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.theme===savedTheme));},100);
   window.setTheme=function(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('panelTheme',t);document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.theme===t));};
 
-  // ===== ورود =====
-  async function checkAuth(){
+  // ===== Login =====
+  async function checkAuth() {
     try {
-      const d=await api('/api/teacher/state');
-      if(d.auth){showDash();return;}
-      if(!d.configured){
-        document.getElementById('login-head').textContent='تعریف رمز عبور (اولین ورود)';
-        document.getElementById('login-hint').textContent='این اولین ورود است؛ یک رمز دلخواه (حداقل ۴ کاراکتر) وارد کنید تا به‌عنوان رمز معلم ثبت شود.';
-        document.getElementById('btn-login').textContent='ثبت رمز و ورود';
+      var d = await api('/api/teacher/state');
+      if (d.auth) { showDash(); return; }
+      if (!d.configured) {
+        document.getElementById('login-head').textContent = 'Set Password (First Login)';
+        document.getElementById('login-hint').textContent = 'Enter a password (min 4 chars)';
+        document.getElementById('btn-login').textContent = 'Set & Login';
       }
-    } catch(e) { console.error("Auth error:", e); }
+    } catch(err) { console.log('Auth check failed:', err); }
   }
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('btn-login').onclick=async()=>{
-      const p=document.getElementById('pass').value;
-      if(!p){document.getElementById('login-err').textContent='رمز عبور را وارد کنید';return;}
-      try {
-        const d=await api('/api/teacher/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:p})});
-        if(d.ok){if(d.created)toast('رمز عبور شما ثبت شد');showDash();}else document.getElementById('login-err').textContent=d.error||'خطا';
-      } catch(e) { document.getElementById('login-err').textContent='خطا در اتصال'; }
-    };
-    document.getElementById('pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
-    document.getElementById('btn-logout').onclick=async()=>{await api('/api/teacher/logout',{method:'POST'});location.reload();};
-    checkAuth();
+  
+  function doLogin() {
+    var p = document.getElementById('pass').value;
+    if (!p) { document.getElementById('login-err').textContent = 'Enter password'; return; }
+    api('/api/teacher/login', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({password:p})})
+      .then(function(d) {
+        if (d.ok) { 
+          if (d.created) toast('Password set!');
+          showDash(); 
+        } else { 
+          document.getElementById('login-err').textContent = d.error || 'Error'; 
+        }
+      })
+      .catch(function(e) { document.getElementById('login-err').textContent = 'Connection error'; });
+  }
+  
+  document.getElementById('btn-login').addEventListener('click', doLogin);
+  document.getElementById('pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('btn-logout').addEventListener('click', function() { 
+    api('/api/teacher/logout', {method:'POST'}).then(function() { location.reload(); }); 
   });
+  checkAuth();
   function showDash(){
     document.getElementById('login').classList.add('hidden');
     document.getElementById('dash').classList.remove('hidden');
