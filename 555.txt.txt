@@ -2252,22 +2252,29 @@ function teacherScript() {
 
   // ===== ورود =====
   async function checkAuth(){
-    const d=await api('/api/teacher/state');
-    if(d.auth){showDash();return;}
-    if(!d.configured){
-      document.getElementById('login-head').textContent='تعریف رمز عبور (اولین ورود)';
-      document.getElementById('login-hint').textContent='این اولین ورود است؛ یک رمز دلخواه (حداقل ۴ کاراکتر) وارد کنید تا به‌عنوان رمز معلم ثبت شود.';
-      document.getElementById('btn-login').textContent='ثبت رمز و ورود';
-    }
+    try {
+      const d=await api('/api/teacher/state');
+      if(d.auth){showDash();return;}
+      if(!d.configured){
+        document.getElementById('login-head').textContent='تعریف رمز عبور (اولین ورود)';
+        document.getElementById('login-hint').textContent='این اولین ورود است؛ یک رمز دلخواه (حداقل ۴ کاراکتر) وارد کنید تا به‌عنوان رمز معلم ثبت شود.';
+        document.getElementById('btn-login').textContent='ثبت رمز و ورود';
+      }
+    } catch(e) { console.error("Auth error:", e); }
   }
-  document.getElementById('btn-login').onclick=async()=>{
-    const p=document.getElementById('pass').value;
-    const d=await api('/api/teacher/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:p})});
-    if(d.ok){if(d.created)toast('رمز عبور شما ثبت شد');showDash();}else document.getElementById('login-err').textContent=d.error||'خطا';
-  };
-  document.getElementById('pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
-  document.getElementById('btn-logout').onclick=async()=>{await api('/api/teacher/logout',{method:'POST'});location.reload();};
-  
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btn-login').onclick=async()=>{
+      const p=document.getElementById('pass').value;
+      if(!p){document.getElementById('login-err').textContent='رمز عبور را وارد کنید';return;}
+      try {
+        const d=await api('/api/teacher/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:p})});
+        if(d.ok){if(d.created)toast('رمز عبور شما ثبت شد');showDash();}else document.getElementById('login-err').textContent=d.error||'خطا';
+      } catch(e) { document.getElementById('login-err').textContent='خطا در اتصال'; }
+    };
+    document.getElementById('pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
+    document.getElementById('btn-logout').onclick=async()=>{await api('/api/teacher/logout',{method:'POST'});location.reload();};
+    checkAuth();
+  });
   function showDash(){
     document.getElementById('login').classList.add('hidden');
     document.getElementById('dash').classList.remove('hidden');
