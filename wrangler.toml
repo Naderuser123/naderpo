@@ -1,0 +1,29 @@
+# Cloudflare Workers Configuration
+# تقویم شمسی - طراحی شده توسط نادر اکشیک
+
+name = "persian-calendar-nader"
+main = "persian-calendar-worker.js"
+compatibility_date = "2024-01-01"
+
+# Workers AI - اختیاری برای قابلیت‌های AI
+[ai]
+binding = "AI"
+
+# KV Namespace - اختیاری برای کش کردن
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"
+
+# Routes - برای سفارشی‌سازی دامنه
+# routes = [
+#   { pattern = "calendar.example.com", zone_name = "example.com" }
+# ]
+
+# Dev settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Observability
+[observability]
+enabled = true
